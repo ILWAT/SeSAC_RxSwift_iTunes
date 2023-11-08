@@ -34,6 +34,7 @@ class SearchViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .white
+        setSearchController()
         configure()
         bind()
         
@@ -45,15 +46,40 @@ class SearchViewController: UIViewController {
                 cell.appNameLabel.text = element.trackName
                 cell.appIconImageView.backgroundColor = .green
                 cell.appIconImageView.kf.setImage(with: URL(string: element.artworkUrl512)!)
+                
+                cell.downloadButton.rx.tap.bind(with: self) { owner, _ in
+                    let nextVC = AppDetailViewController()
+                    owner.navigationController?.pushViewController(nextVC, animated: true)
+                }
+                .disposed(by: cell.disposeBag)
             }
             .disposed(by: disposeBag)
         
-        let request = APIServicer.shared.fetchData(type: SearchAppModel.self, api: .iTunesSearch(query: "todo"))
-            .asDriver(onErrorJustReturn: SearchAppModel(resultCount: 0, results: []))
+        searchBar
+            .rx
+            .searchButtonClicked
+            .withLatestFrom(searchBar.rx.text.orEmpty, resultSelector: { _, value in
+                return value
+            })
+            .flatMap({ query in
+                return APIServicer.shared.fetchData(
+                    type: SearchAppModel.self,
+                    api: .iTunesSearch(query: query)
+                )
+            })
+            .share()
+            .subscribe(with: self) { owner, element in
+                let data = element.results
+                
+                owner.items.onNext(data)
+            }
+            .disposed(by: disposeBag)
         
-        request
-            .drive(with: self) { owner, value in
-                owner.items.onNext(value.results)
+        searchBar
+            .rx
+            .cancelButtonClicked
+            .subscribe(with: self) { owner, _ in
+                owner.searchBar.rx.text.onNext(nil)
             }
             .disposed(by: disposeBag)
         
@@ -63,6 +89,7 @@ class SearchViewController: UIViewController {
     private func setSearchController() {
         view.addSubview(searchBar)
         self.navigationItem.titleView = searchBar
+        searchBar.showsCancelButton = true
     }
 
     

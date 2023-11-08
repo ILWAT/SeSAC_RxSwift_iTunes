@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class SearchTableViewCell: UITableViewCell {
     
@@ -37,6 +39,10 @@ final class SearchTableViewCell: UITableViewCell {
         return button
     }()
     
+    lazy var imageCollectionView = UICollectionView(frame: .zero, collectionViewLayout: setCollectionViewLayout())
+    
+    let disposeBag = DisposeBag()
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
@@ -52,10 +58,11 @@ final class SearchTableViewCell: UITableViewCell {
         contentView.addSubview(appNameLabel)
         contentView.addSubview(appIconImageView)
         contentView.addSubview(downloadButton)
+        contentView.addSubview(imageCollectionView)
         
         appIconImageView.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.leading.equalTo(20)
+            $0.top.leading.equalToSuperview().inset(20)
+            //            $0.leading.equalTo(20)
             $0.size.equalTo(60)
         }
         
@@ -71,5 +78,28 @@ final class SearchTableViewCell: UITableViewCell {
             $0.height.equalTo(32)
             $0.width.equalTo(72)
         }
+        
+        imageCollectionView.snp.makeConstraints { make in
+            make.verticalEdges.equalToSuperview()
+            make.top.equalTo(appNameLabel.snp.bottom).offset(10)
+            make.height.equalTo(400)
+        }
+    }
+    
+    private func setCollectionViewLayout() -> UICollectionViewLayout{
+        let layout = UICollectionViewFlowLayout()
+        let spacing: CGFloat = 10
+        let screenWidth = contentView.bounds.width - spacing
+        let itemWidth = screenWidth - (spacing * 4)
+        layout.itemSize = CGSize(width: 392, height: 696)
+        layout.minimumInteritemSpacing = spacing
+        layout.minimumLineSpacing = spacing
+        layout.scrollDirection = .horizontal
+        
+        return layout
+    }
+    
+    func setImageCollectionView(screenShot: [String]){
+        
     }
 }
