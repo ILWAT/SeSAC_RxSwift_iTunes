@@ -43,4 +43,21 @@ final class APIServicer{
             return Disposables.create()
         }
     }
+    
+//    func fetchiTunes(api: Router) -> Observable<SearchAppModel> {
+//        return Observable<SearchAppModel>.create { value in
+//            AF.request(api).validate().responseDecodable(of: SearchAppModel.self) { response in
+//                switch response.result {
+//                case .success(let success):
+//                    print("success", success)
+//                    value.onNext(success)
+//                case .failure(let failure):
+//                    print(failure)
+//                    value.onError(failure)
+//                }
+//            }
+//            
+//            return Disposables.create()
+//        }
+//    }
 }

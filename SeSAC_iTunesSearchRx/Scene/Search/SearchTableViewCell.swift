@@ -9,19 +9,20 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import Kingfisher
 
 final class SearchTableViewCell: UITableViewCell {
     
     static let identifier = "SearchTableViewCell"
     
-    let appNameLabel: UILabel = {
+    private let appNameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textColor = .black
         return label
     }()
     
-    let appIconImageView: UIImageView = {
+    private let appIconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
@@ -39,9 +40,80 @@ final class SearchTableViewCell: UITableViewCell {
         return button
     }()
     
-    lazy var imageCollectionView = UICollectionView(frame: .zero, collectionViewLayout: setCollectionViewLayout())
+    private lazy var developerInfoStack = {
+        let view = UIStackView(arrangedSubviews: [rateStackView, developerNameLabel, categoryLabel])
+        view.axis = .horizontal
+        view.distribution = .equalSpacing
+        view.spacing = 20
+        return view
+    }()
+
+    private let developerNameLabel = {
+        let view = UILabel()
+        view.text = ""
+        view.textAlignment = .center
+        view.setContentCompressionResistancePriority(.dragThatCanResizeScene, for: .horizontal)
+        return view
+    }()
     
-    let disposeBag = DisposeBag()
+    private let categoryLabel = {
+        let view = UILabel()
+        view.text = ""
+        view.textAlignment = .right
+        return view
+    }()
+    
+    private lazy var rateStackView = {
+        let view = UIStackView(arrangedSubviews: [rateImageView, rateLabel])
+        view.axis = .horizontal
+        view.spacing = 0
+        view.alignment = .fill
+        view.distribution = .equalSpacing
+        return view
+    }()
+    
+    private let rateLabel = {
+        let label = UILabel()
+        label.text = "0.0"
+        label.textAlignment = .left
+        return label
+    }()
+    
+    private let rateImageView = {
+        let view = UIImageView()
+        view.image = UIImage(systemName: "star.fill")
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
+    
+    lazy var screenShotStackView = {
+        let view = UIStackView(arrangedSubviews: [screenShotImageView, screenShotSecondView, screenShotThirdView])
+        view.axis = .horizontal
+        view.distribution = .fillEqually
+        view.alignment = .fill
+        view.spacing = 10
+        return view
+    }()
+    
+    private let screenShotImageView = {
+        let view = UIImageView(frame: .zero)
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
+    
+    private let screenShotSecondView = {
+        let view = UIImageView(frame: .zero)
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
+    
+    private let screenShotThirdView = {
+        let view = UIImageView(frame: .zero)
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
+    
+    var disposeBag = DisposeBag()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -58,11 +130,12 @@ final class SearchTableViewCell: UITableViewCell {
         contentView.addSubview(appNameLabel)
         contentView.addSubview(appIconImageView)
         contentView.addSubview(downloadButton)
-        contentView.addSubview(imageCollectionView)
+        contentView.addSubview(screenShotStackView)
+        contentView.addSubview(developerInfoStack)
         
         appIconImageView.snp.makeConstraints {
             $0.top.leading.equalToSuperview().inset(20)
-            //            $0.leading.equalTo(20)
+//            $0.leading.equalTo(20)
             $0.size.equalTo(60)
         }
         
@@ -78,28 +151,31 @@ final class SearchTableViewCell: UITableViewCell {
             $0.height.equalTo(32)
             $0.width.equalTo(72)
         }
-        
-        imageCollectionView.snp.makeConstraints { make in
-            make.verticalEdges.equalToSuperview()
-            make.top.equalTo(appNameLabel.snp.bottom).offset(10)
-            make.height.equalTo(400)
+        developerInfoStack.snp.makeConstraints { make in
+            make.top.equalTo(appIconImageView.snp.bottom).offset(5)
+            make.leading.equalTo(appIconImageView)
+            make.trailing.equalTo(downloadButton)
         }
+        screenShotStackView.snp.makeConstraints { make in
+            make.top.equalTo(developerInfoStack.snp.bottom).offset(8)
+            make.leading.equalTo(appIconImageView)
+            make.trailing.equalTo(downloadButton)
+            make.height.equalTo(screenShotStackView.snp.width).multipliedBy(0.6)
+            make.bottom.equalToSuperview().inset(20)
+        }
+        
+        
     }
     
-    private func setCollectionViewLayout() -> UICollectionViewLayout{
-        let layout = UICollectionViewFlowLayout()
-        let spacing: CGFloat = 10
-        let screenWidth = contentView.bounds.width - spacing
-        let itemWidth = screenWidth - (spacing * 4)
-        layout.itemSize = CGSize(width: 392, height: 696)
-        layout.minimumInteritemSpacing = spacing
-        layout.minimumLineSpacing = spacing
-        layout.scrollDirection = .horizontal
-        
-        return layout
-    }
-    
-    func setImageCollectionView(screenShot: [String]){
-        
+    func setCellData(element: AppInfo){
+        appNameLabel.text = element.trackName
+        appIconImageView.backgroundColor = .green
+        appIconImageView.kf.setImage(with: URL(string: element.artworkUrl512)!)
+        screenShotImageView.kf.setImage(with: URL(string: element.screenshotUrls[0]))
+        screenShotSecondView.kf.setImage(with: URL(string: element.screenshotUrls[1]))
+        screenShotThirdView.kf.setImage(with: URL(string: element.screenshotUrls[2]))
+        rateLabel.text = String(format: "%.2f", element.averageUserRating)
+        developerNameLabel.text = element.sellerName
+        categoryLabel.text = element.genres.first
     }
 }

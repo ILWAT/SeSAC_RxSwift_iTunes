@@ -17,16 +17,15 @@ class SearchViewController: UIViewController {
        let view = UITableView()
         view.register(SearchTableViewCell.self, forCellReuseIdentifier: SearchTableViewCell.identifier)
         view.backgroundColor = .white
-        view.rowHeight = 80
+        view.rowHeight = UITableView.automaticDimension
+        view.estimatedRowHeight = 400
         view.separatorStyle = .none
        return view
      }()
     
     let searchBar = UISearchBar()
-    
-    var cellData: [AppInfo] = []
      
-    lazy var items = BehaviorSubject(value: cellData)
+    lazy var items = PublishSubject<[AppInfo]>()
     
     let disposeBag = DisposeBag()
     
@@ -43,9 +42,8 @@ class SearchViewController: UIViewController {
     func bind() {
         items
             .bind(to: tableView.rx.items(cellIdentifier: SearchTableViewCell.identifier, cellType: SearchTableViewCell.self)) { (row, element, cell) in
-                cell.appNameLabel.text = element.trackName
-                cell.appIconImageView.backgroundColor = .green
-                cell.appIconImageView.kf.setImage(with: URL(string: element.artworkUrl512)!)
+                cell.setCellData(element: element)
+                cell.disposeBag = DisposeBag()
                 
                 cell.downloadButton.rx.tap.bind(with: self) { owner, _ in
                     let nextVC = AppDetailViewController()
@@ -69,9 +67,7 @@ class SearchViewController: UIViewController {
             })
             .share()
             .subscribe(with: self) { owner, element in
-                let data = element.results
-                
-                owner.items.onNext(data)
+                owner.items.onNext(element.results)
             }
             .disposed(by: disposeBag)
         
@@ -89,6 +85,7 @@ class SearchViewController: UIViewController {
     private func setSearchController() {
         view.addSubview(searchBar)
         self.navigationItem.titleView = searchBar
+        self.title = "검색"
         searchBar.showsCancelButton = true
     }
 
